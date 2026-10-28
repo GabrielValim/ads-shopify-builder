@@ -1,0 +1,411 @@
+{% comment %}
+  ADS AutoStore — componente próprio registrado: depoimentos (ads-testimonials 1.0.0).
+  Genérico (sem marca, textos ou imagens de nenhuma loja). Sem JavaScript.
+  Textos simples são escapados; richtext vem do editor/gerador (HTML restrito
+  pela Shopify); avaliação só é exibida quando definida explicitamente.
+  `notice`: aviso visível opcional (ex.: identificar conteúdo demonstrativo).
+{% endcomment %}
+{%- style -%}
+  .section-{{ section.id }}-padding {
+    padding-top: {{ section.settings.padding_top | times: 0.75 | round: 0 }}px;
+    padding-bottom: {{ section.settings.padding_bottom | times: 0.75 | round: 0 }}px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .section-{{ section.id }}-padding {
+      padding-top: {{ section.settings.padding_top }}px;
+      padding-bottom: {{ section.settings.padding_bottom }}px;
+    }
+  }
+{%- endstyle -%}
+
+<div class="ads-testimonials color-{{ section.settings.color_scheme }} gradient">
+  <div class="page-width section-{{ section.id }}-padding">
+    {%- unless section.settings.heading == blank -%}
+      <h2 class="ads-testimonials__heading ads-testimonials__heading--{{ section.settings.heading_alignment }} inline-richtext {{ section.settings.heading_size }}">
+        {{ section.settings.heading }}
+      </h2>
+    {%- endunless -%}
+    {%- unless section.settings.notice == blank -%}
+      <p class="ads-testimonials__notice ads-testimonials__heading--{{ section.settings.heading_alignment }}">
+        {{- section.settings.notice | escape -}}
+      </p>
+    {%- endunless -%}
+    {%- if section.blocks.size > 0 -%}
+    <ul
+      class="ads-testimonials__list ads-testimonials__list--desktop-{{ section.settings.columns_desktop }} ads-testimonials__list--mobile-{{ section.settings.columns_mobile }}"
+      role="list"
+    >
+      {%- for block in section.blocks -%}
+        <li
+          class="ads-testimonials__item{% if section.settings.card_style == 'card' %} ads-testimonials__item--card{% endif %}"
+          {{ block.shopify_attributes }}
+        >
+          <figure class="ads-testimonials__figure">
+            {%- if block.settings.rating != 'none' -%}
+              {%- assign rating = block.settings.rating | plus: 0 -%}
+              <p class="ads-testimonials__rating">
+                <span aria-hidden="true">
+                  {%- for i in (1..5) -%}
+                    {%- if i <= rating -%}★{%- else -%}☆{%- endif -%}
+                  {%- endfor -%}
+                </span>
+                <span class="visually-hidden">{{ rating }}/5</span>
+              </p>
+            {%- endif -%}
+            {%- unless block.settings.quote == blank -%}
+              <blockquote class="ads-testimonials__quote rte{% if section.settings.quote_style == 'italic' %} ads-testimonials__quote--italic{% endif %}">
+                {{ block.settings.quote }}
+              </blockquote>
+            {%- endunless -%}
+            {%- if section.settings.show_divider -%}
+              <hr class="ads-testimonials__divider">
+            {%- endif -%}
+            {%- if block.settings.author != blank or block.settings.author_meta != blank -%}
+              <figcaption class="ads-testimonials__author">
+                {%- if block.settings.avatar != blank -%}
+                  {{
+                    block.settings.avatar
+                    | image_url: width: 96
+                    | image_tag: loading: 'lazy', width: 48, height: 48, alt: '', class: 'ads-testimonials__avatar'
+                  }}
+                {%- elsif block.settings.initials != blank -%}
+                  <span class="ads-testimonials__avatar ads-testimonials__avatar--initials" aria-hidden="true">
+                    {{- block.settings.initials | escape -}}
+                  </span>
+                {%- endif -%}
+                <span class="ads-testimonials__author-text">
+                  {%- unless block.settings.author == blank -%}
+                    <span class="ads-testimonials__name">{{ block.settings.author | escape }}</span>
+                  {%- endunless -%}
+                  {%- unless block.settings.author_meta == blank -%}
+                    <span class="ads-testimonials__meta">{{ block.settings.author_meta | escape }}</span>
+                  {%- endunless -%}
+                </span>
+              </figcaption>
+            {%- endif -%}
+          </figure>
+        </li>
+      {%- endfor -%}
+    </ul>
+    {%- endif -%}
+  </div>
+</div>
+
+{% stylesheet %}
+  .ads-testimonials__heading {
+    margin: 0 0 3rem;
+  }
+
+  .ads-testimonials__heading--left {
+    text-align: left;
+  }
+
+  .ads-testimonials__heading--center {
+    text-align: center;
+  }
+
+  .ads-testimonials__heading--right {
+    text-align: right;
+  }
+
+  .ads-testimonials__notice {
+    margin: -2rem 0 3rem;
+    font-size: 1.4rem;
+    color: rgba(var(--color-foreground), 0.75);
+  }
+
+  .ads-testimonials__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--grid-mobile-vertical-spacing) var(--grid-mobile-horizontal-spacing);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ads-testimonials__list--mobile-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media screen and (min-width: 750px) {
+    .ads-testimonials__list {
+      gap: var(--grid-desktop-vertical-spacing) var(--grid-desktop-horizontal-spacing);
+    }
+
+    .ads-testimonials__list--desktop-1 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ads-testimonials__list--desktop-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ads-testimonials__list--desktop-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .ads-testimonials__list--desktop-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .ads-testimonials__item {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .ads-testimonials__item--card {
+    padding: 2.4rem;
+    border-radius: var(--text-boxes-radius);
+    background-color: rgba(var(--color-foreground), 0.04);
+    border: var(--text-boxes-border-width) solid rgba(var(--color-foreground), var(--text-boxes-border-opacity));
+  }
+
+  .ads-testimonials__figure {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+    height: 100%;
+  }
+
+  .ads-testimonials__rating {
+    margin: 0;
+    letter-spacing: 0.2rem;
+    color: rgb(var(--color-foreground));
+  }
+
+  .ads-testimonials__quote {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .ads-testimonials__quote--italic {
+    font-style: italic;
+  }
+
+  .ads-testimonials__divider {
+    margin: 0;
+    border: 0;
+    border-top: 0.1rem solid rgba(var(--color-foreground), 0.12);
+  }
+
+  .ads-testimonials__author {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .ads-testimonials__avatar {
+    flex: 0 0 4.8rem;
+    width: 4.8rem;
+    height: 4.8rem;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .ads-testimonials__avatar--initials {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(var(--color-foreground), 0.08);
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  .ads-testimonials__author-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .ads-testimonials__name {
+    font-weight: 600;
+  }
+
+  .ads-testimonials__meta {
+    font-size: 1.3rem;
+    color: rgba(var(--color-foreground), 0.75);
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Depoimentos (ADS)",
+  "tag": "section",
+  "class": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "max_blocks": 12,
+  "settings": [
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "Título",
+      "default": "Depoimentos"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "label": "Tamanho do título",
+      "options": [
+        { "value": "h2", "label": "Pequeno" },
+        { "value": "h1", "label": "Médio" },
+        { "value": "h0", "label": "Grande" }
+      ],
+      "default": "h1"
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Alinhamento do título",
+      "options": [
+        { "value": "left", "label": "Esquerda" },
+        { "value": "center", "label": "Centro" },
+        { "value": "right", "label": "Direita" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "text",
+      "id": "notice",
+      "label": "Aviso",
+      "info": "Opcional. Use para identificar, por exemplo, conteúdo demonstrativo ou a origem dos depoimentos."
+    },
+    {
+      "type": "range",
+      "id": "columns_desktop",
+      "label": "Colunas no desktop",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "Colunas no celular",
+      "options": [
+        { "value": "1", "label": "1 coluna" },
+        { "value": "2", "label": "2 colunas" }
+      ],
+      "default": "1"
+    },
+    {
+      "type": "select",
+      "id": "card_style",
+      "label": "Estilo dos itens",
+      "options": [
+        { "value": "plain", "label": "Sem cartão" },
+        { "value": "card", "label": "Cartão" }
+      ],
+      "default": "card"
+    },
+    {
+      "type": "select",
+      "id": "quote_style",
+      "label": "Estilo da citação",
+      "options": [
+        { "value": "normal", "label": "Normal" },
+        { "value": "italic", "label": "Itálico" }
+      ],
+      "default": "normal"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_divider",
+      "label": "Linha entre citação e autoria",
+      "default": false
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Esquema de cores",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Espaçamento"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Espaço superior",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 36
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Espaço inferior",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 36
+    }
+  ],
+  "blocks": [
+    {
+      "type": "testimonial",
+      "name": "Depoimento",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "quote",
+          "label": "Depoimento",
+          "default": "<p>Texto do depoimento.</p>"
+        },
+        {
+          "type": "text",
+          "id": "author",
+          "label": "Autoria"
+        },
+        {
+          "type": "text",
+          "id": "author_meta",
+          "label": "Linha secundária"
+        },
+        {
+          "type": "text",
+          "id": "initials",
+          "label": "Iniciais (sem imagem)"
+        },
+        {
+          "type": "image_picker",
+          "id": "avatar",
+          "label": "Avatar"
+        },
+        {
+          "type": "select",
+          "id": "rating",
+          "label": "Avaliação",
+          "info": "Exiba somente avaliações reais e autorizadas.",
+          "options": [
+            { "value": "none", "label": "Não exibir" },
+            { "value": "1", "label": "1 de 5" },
+            { "value": "2", "label": "2 de 5" },
+            { "value": "3", "label": "3 de 5" },
+            { "value": "4", "label": "4 de 5" },
+            { "value": "5", "label": "5 de 5" }
+          ],
+          "default": "none"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Depoimentos (ADS)",
+      "blocks": [{ "type": "testimonial" }, { "type": "testimonial" }, { "type": "testimonial" }]
+    }
+  ]
+}
+{% endschema %}

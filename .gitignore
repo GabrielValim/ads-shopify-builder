@@ -1,0 +1,7 @@
+node_modules/
+runs/
+.ads/
+ADS-AutoStore/
+.env
+.env.*
+*.zip

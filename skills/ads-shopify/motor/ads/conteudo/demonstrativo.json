@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "kind": "ContentPack",
+  "id": "ads-demonstrativo-neutro",
+  "authorization": {
+    "basis": "own-content",
+    "owner": "ADS AutoStore (conteúdo demonstrativo neutro da distribuição)",
+    "note": "Textos de espaço reservado escritos pelo ADS para o tema inicial. Não contêm números, avaliações, pessoas, marcas nem material de terceiros. Devem ser substituídos pelo lojista no Theme Editor."
+  },
+  "sections": {
+    "header": [ { "menu": "main-menu" } ],
+    "hero": [
+      { "heading": "Título principal da sua loja", "text": "Escreva aqui, em uma ou duas frases, o que a sua marca oferece. Edite este texto no editor do tema.", "buttons": [ { "label": "Ver produtos", "link": "shopify://collections/all" } ] }
+    ],
+    "rich-text": [
+      { "heading": "Sobre a marca", "text": "Use este espaço para contar a história da sua marca. Edite no editor do tema." },
+      { "heading": "Fale conosco", "text": "Informe aqui como os clientes podem entrar em contato.", "buttons": [ { "label": "Contato", "link": "/pages/contact" } ] }
+    ],
+    "multicolumn": [
+      { "items": [
+        { "title": "Diferencial um", "text": "Descreva um diferencial da sua loja." },
+        { "title": "Diferencial dois", "text": "Descreva outro diferencial." },
+        { "title": "Diferencial três", "text": "Descreva mais um diferencial." },
+        { "title": "Diferencial quatro", "text": "Descreva um último diferencial." }
+      ] },
+      { "items": [
+        { "title": "Destaque um", "text": "Texto curto de destaque." },
+        { "title": "Destaque dois", "text": "Texto curto de destaque." },
+        { "title": "Destaque três", "text": "Texto curto de destaque." },
+        { "title": "Destaque quatro", "text": "Texto curto de destaque." }
+      ] }
+    ],
+    "collapsible-content": [
+      { "heading": "Perguntas frequentes", "items": [
+        { "title": "Pergunta frequente um", "paragraphs": [ "Escreva aqui a resposta." ] },
+        { "title": "Pergunta frequente dois", "paragraphs": [ "Escreva aqui a resposta." ] },
+        { "title": "Pergunta frequente três", "paragraphs": [ "Escreva aqui a resposta." ] },
+        { "title": "Pergunta frequente quatro", "paragraphs": [ "Escreva aqui a resposta." ] }
+      ] },
+      { "heading": "Mais informações", "items": [
+        { "title": "Tópico um", "paragraphs": [ "Escreva aqui o conteúdo." ] },
+        { "title": "Tópico dois", "paragraphs": [ "Escreva aqui o conteúdo." ] }
+      ] }
+    ],
+    "testimonials": [
+      { "heading": "Depoimentos", "basis": "demonstrative", "notice": "Espaço reservado — substitua por depoimentos reais de clientes.",
+        "items": [
+          { "quote": [ "Espaço para um depoimento real de cliente. Edite no editor do tema." ], "author": "Nome do cliente", "meta": "Espaço reservado", "initials": "NC" },
+          { "quote": [ "Espaço para um depoimento real de cliente. Edite no editor do tema." ], "author": "Nome do cliente", "meta": "Espaço reservado", "initials": "NC" },
+          { "quote": [ "Espaço para um depoimento real de cliente. Edite no editor do tema." ], "author": "Nome do cliente", "meta": "Espaço reservado", "initials": "NC" }
+        ] }
+    ],
+    "image-with-text": [
+      { "heading": "Imagem com texto", "paragraphs": [ "Escolha uma imagem própria e escreva um texto curto." ], "button": { "label": "Saiba mais", "link": "/pages/about" } }
+    ],
+    "footer": [
+      { "columns": [
+        { "kind": "text", "heading": "Sua loja", "text": "Uma frase sobre a sua loja." },
+        { "kind": "menu", "heading": "Links", "menu": "footer" },
+        { "kind": "menu", "heading": "Ajuda", "menu": "footer" }
+      ] }
+    ]
+  }
+}

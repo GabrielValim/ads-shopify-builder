@@ -1,0 +1,20 @@
+{
+  "name": "ads-shopify",
+  "displayName": "ADS Shopify Builder",
+  "version": "0.3.0",
+  "description": "Cria e melhora lojas Shopify completas a partir de um site de referência: tema editável, rascunho não publicado e ajustes por conversa.",
+  "author": {
+    "name": "Gabriel Valim",
+    "url": "https://github.com/GabrielValim"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/GabrielValim/ads-shopify-builder",
+  "repository": "https://github.com/GabrielValim/ads-shopify-builder",
+  "keywords": [
+    "shopify",
+    "theme",
+    "dawn",
+    "liquid",
+    "ecommerce"
+  ]
+}

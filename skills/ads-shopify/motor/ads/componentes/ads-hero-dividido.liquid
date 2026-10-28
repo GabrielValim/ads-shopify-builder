@@ -1,0 +1,311 @@
+{%- comment -%}
+  ADS Hero dividido 1.1.0 (biblioteca do núcleo ADS Shopify Builder).
+  Duas colunas (conteúdo | imagem; empilha no celular). O conteúdo é feito de BLOCOS reordenáveis no editor:
+  selo, título (2 partes; a 2ª em cor sólida ou gradiente), texto, botões (até 2), nota; e até 3 cartões de recurso
+  abaixo das colunas. Os valores de cada loja ficam no template, nunca neste arquivo.
+  Sem JavaScript, sem URL externa, CSS com escopo da seção; estilos de bloco por variáveis CSS no próprio bloco.
+  Imagem vazia: só a forma decorativa (se escolhida) e uma moldura no editor.
+{%- endcomment -%}
+{%- assign s = section.settings -%}
+{%- assign n_recursos = 0 -%}
+{%- for block in section.blocks -%}{%- if block.type == 'recurso' -%}{%- assign n_recursos = n_recursos | plus: 1 -%}{%- endif -%}{%- endfor -%}
+<style>
+  #shopify-section-{{ section.id }} .ads-hd {
+    position: relative; overflow: hidden;
+    padding: {{ s.espaco_topo }}px 20px {{ s.espaco_base }}px;
+    color: {{ s.cor_texto }};
+    {%- if s.fundo == 'brilhos' %}
+    background:
+      radial-gradient(800px 520px at 74% 358px, color-mix(in srgb, {{ s.cor_realce }} 45%, transparent), transparent 70%),
+      radial-gradient(1400px 420px at 50% 568px, color-mix(in srgb, {{ s.cor_realce_2 }} 42%, transparent), transparent 75%),
+      linear-gradient({{ s.cor_fundo }} 0, {{ s.cor_fundo }} 128px, {{ s.cor_fundo_2 }} 568px, {{ s.cor_fundo_3 }} 100%);
+    {%- else %}
+    background: {{ s.cor_fundo }};
+    {%- endif %}
+    font-family: var(--font-body-family);
+  }
+  #shopify-section-{{ section.id }} .ads-hd__grade { max-width: {{ s.largura_conteudo }}px; margin: 0 auto; display: grid; grid-template-columns: {{ s.proporcao_texto }}fr {{ 100 | minus: s.proporcao_texto }}fr; align-items: {{ s.alinhamento_vertical }}; }
+  #shopify-section-{{ section.id }} .ads-hd__selo {
+    display: inline-flex; align-items: center; margin: 0 0 var(--espaco); padding: 8px 20px; border-radius: 999px;
+    background: linear-gradient(to right, var(--inicio), var(--fim)); border: 1px solid color-mix(in srgb, var(--borda) 30%, transparent);
+    color: var(--cor); font-size: var(--tamanho); font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; line-height: 1.5;
+  }
+  #shopify-section-{{ section.id }} .ads-hd__titulo {
+    margin: 0; max-width: var(--largura); color: var(--cor);
+    font-family: var(--font-heading-family); font-weight: var(--peso); font-style: var(--estilo);
+    font-size: var(--tamanho); line-height: var(--entrelinha); letter-spacing: var(--espacamento);
+  }
+  #shopify-section-{{ section.id }} .ads-hd__titulo span { display: block; }
+  #shopify-section-{{ section.id }} .ads-hd__titulo span + span { margin-top: var(--partes); }
+  #shopify-section-{{ section.id }} .ads-hd__destaque { color: var(--destaque); }
+  #shopify-section-{{ section.id }} .ads-hd__destaque--gradiente { background: linear-gradient(to right, var(--destaque), var(--destaque-fim)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #shopify-section-{{ section.id }} .ads-hd__apoio { margin: var(--espaco) 0 0; max-width: var(--largura); font-size: var(--tamanho); line-height: 1.625; color: var(--cor); }
+  #shopify-section-{{ section.id }} .ads-hd__apoio p { margin: 0; }
+  #shopify-section-{{ section.id }} .ads-hd__botoes { display: flex; gap: 16px; margin-top: var(--espaco); flex-wrap: wrap; }
+  #shopify-section-{{ section.id }} .ads-hd__botao {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    min-height: var(--altura); padding: 0 var(--padding); border-radius: var(--raio);
+    font-size: var(--tamanho); font-weight: 600; line-height: 24px; text-decoration: none;
+  }
+  #shopify-section-{{ section.id }} .ads-hd__botao--1 {
+    color: var(--texto-1); background: linear-gradient(135deg, var(--inicio), var(--fim));
+    border: 1px solid color-mix(in srgb, var(--borda-1) 50%, transparent);
+    box-shadow: 0 var(--sombra) calc(var(--sombra) * 2.5) -10px color-mix(in srgb, var(--cor-sombra) var(--opacidade-sombra), transparent);
+  }
+  #shopify-section-{{ section.id }} .ads-hd__botao--2 { color: var(--texto-2); background: var(--fundo-2); border: 1px solid color-mix(in srgb, var(--borda-2) var(--opacidade-borda-2), transparent); }
+  #shopify-section-{{ section.id }} .ads-hd__botao svg { width: 20px; height: 20px; flex: none; }
+  #shopify-section-{{ section.id }} .ads-hd__nota { margin: var(--espaco) 0 0; font-size: var(--tamanho); line-height: 1.5; color: var(--cor); }
+  #shopify-section-{{ section.id }} .ads-hd__midia { position: relative; width: 100%; max-width: {{ s.largura_imagem }}px; aspect-ratio: {{ s.proporcao_imagem }}; margin-top: {{ s.deslocamento_imagem }}px;{% if n_recursos > 0 %} margin-bottom: -60px;{% endif %} justify-self: end; }
+  #shopify-section-{{ section.id }} .ads-hd__midia img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: {% if s.forma_imagem == 'nenhuma' %}contain{% else %}cover{% endif %}; display: block; }
+  {%- case s.forma_imagem -%}
+    {%- when 'organica' %}
+  #shopify-section-{{ section.id }} .ads-hd__midia--forma { border-radius: 58% 42% 46% 54% / 46% 38% 62% 54%; overflow: hidden; background: {{ s.cor_forma }}; box-shadow: 0 30px 80px -30px color-mix(in srgb, {{ s.cor_forma }} 45%, transparent); }
+    {%- when 'arredondada' %}
+  #shopify-section-{{ section.id }} .ads-hd__midia--forma { border-radius: 32px; overflow: hidden; background: {{ s.cor_forma }}; }
+  {%- endcase %}
+  #shopify-section-{{ section.id }} .ads-hd__moldura { position: absolute; inset: 0; z-index: 1; border: 2px dashed color-mix(in srgb, {{ s.cor_texto }} 35%, transparent); border-radius: 24px; display: grid; place-items: center; font-size: 14px; }
+  {%- if s.mostrar_pedestal %}
+  #shopify-section-{{ section.id }} .ads-hd__midia::before {
+    content: ""; position: absolute; left: -14%; right: -14%; bottom: 2%; height: 24%; border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, {{ s.cor_realce }} 70%, transparent), color-mix(in srgb, {{ s.cor_realce }} 25%, transparent) 60%, transparent);
+  }
+  #shopify-section-{{ section.id }} .ads-hd__midia::after {
+    content: ""; position: absolute; left: -8%; right: -8%; bottom: 2%; height: 19%; border-radius: 50%;
+    background: linear-gradient(color-mix(in srgb, {{ s.cor_realce }} 85%, transparent), color-mix(in srgb, {{ s.cor_realce_2 }} 92%, transparent) 45%, color-mix(in srgb, {{ s.cor_fundo_2 }} 70%, transparent));
+    box-shadow: 0 -6px 40px -6px color-mix(in srgb, {{ s.cor_realce }} 45%, transparent);
+  }
+  {%- endif %}
+  #shopify-section-{{ section.id }} .ads-hd__recursos { grid-column: 1 / -1; position: relative; z-index: 2; list-style: none; padding: 0; margin: {{ s.espaco_recursos }}px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  #shopify-section-{{ section.id }} .ads-hd__recurso {
+    display: flex; align-items: center; gap: 16px; min-height: 94px; padding: 14px 20px; color: {{ s.cor_titulo_cartao }};
+    border-radius: {{ s.raio_cartao }}px; border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(135deg, color-mix(in srgb, {{ s.cor_cartao }} 55%, transparent), color-mix(in srgb, {{ s.cor_cartao_2 }} 75%, transparent));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+  #shopify-section-{{ section.id }} .ads-hd__icone { flex: none; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, {{ s.cor_icone }}, {{ s.cor_icone_2 }}); }
+  #shopify-section-{{ section.id }} .ads-hd__icone svg { width: 24px; height: 24px; }
+  #shopify-section-{{ section.id }} .ads-hd__recurso-titulo { display: block; font-size: 16px; font-weight: 600; line-height: 22px; color: inherit; }
+  #shopify-section-{{ section.id }} .ads-hd__recurso-texto { display: block; margin-top: 2px; font-size: 14px; line-height: 20px; color: {{ s.cor_texto_cartao }}; }
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .ads-hd { padding: {{ s.espaco_topo_mobile }}px 24px {{ s.espaco_base }}px; text-align: center; }
+    #shopify-section-{{ section.id }} .ads-hd__grade { grid-template-columns: 1fr; }
+    #shopify-section-{{ section.id }} .ads-hd__selo { letter-spacing: 0.2em; }
+    #shopify-section-{{ section.id }} .ads-hd__titulo { font-size: var(--tamanho-mobile); margin: 0 auto; }
+    #shopify-section-{{ section.id }} .ads-hd__apoio { margin-left: auto; margin-right: auto; }
+    #shopify-section-{{ section.id }} .ads-hd__botoes { flex-direction: column; align-items: var(--mobile); }
+    #shopify-section-{{ section.id }} .ads-hd__midia { max-width: {{ s.largura_imagem_mobile }}px; aspect-ratio: {{ s.proporcao_imagem_mobile }}; margin: {{ s.espaco_imagem_mobile }}px auto 0; justify-self: center; }
+    #shopify-section-{{ section.id }} .ads-hd__recursos { grid-template-columns: 1fr; gap: 12px; margin-top: 28px; text-align: left; }
+    #shopify-section-{{ section.id }} .ads-hd__recurso { min-height: 96px; }
+  }
+</style>
+
+<div class="ads-hd">
+  <div class="ads-hd__grade">
+    <div class="ads-hd__texto">
+      {%- for block in section.blocks -%}
+        {%- assign b = block.settings -%}
+        {%- case block.type -%}
+          {%- when 'selo' -%}
+            {%- if b.texto != blank -%}
+              <p class="ads-hd__selo ads-r-selo" style="--inicio: {{ b.cor_inicio }}; --fim: {{ b.cor_fim }}; --borda: {{ b.cor_borda }}; --cor: {{ b.cor_texto }}; --tamanho: {{ b.tamanho }}px; --espaco: {{ b.espaco_abaixo }}px;" {{ block.shopify_attributes }}>{{ b.texto }}</p>
+            {%- endif -%}
+          {%- when 'titulo' -%}
+            <h1 class="ads-hd__titulo ads-r-titulo" style="--cor: {{ b.cor }}; --destaque: {{ b.destaque_inicio }}; --destaque-fim: {{ b.destaque_fim }}; --peso: {{ b.peso }}; --estilo: {% if b.italico %}italic{% else %}normal{% endif %}; --tamanho: {{ b.tamanho }}px; --tamanho-mobile: {{ b.tamanho_mobile }}px; --entrelinha: calc({{ b.entrelinha }} / 100); --espacamento: calc({{ b.espacamento }}em / 1000); --partes: {{ b.espaco_partes }}px; --largura: {{ b.largura }}ch;" {{ block.shopify_attributes }}>
+              {%- if b.titulo != blank -%}<span>{{ b.titulo }}</span>{%- endif -%}
+              {%- if b.titulo_destaque != blank -%}<span class="ads-hd__destaque{% if b.destaque_estilo == 'gradiente' %} ads-hd__destaque--gradiente{% endif %}">{{ b.titulo_destaque }}</span>{%- endif -%}
+            </h1>
+          {%- when 'texto' -%}
+            {%- if b.texto != blank -%}
+              <div class="ads-hd__apoio ads-r-paragrafo" style="--cor: {{ b.cor }}; --tamanho: {{ b.tamanho }}px; --largura: {{ b.largura }}px; --espaco: {{ b.espaco_acima }}px;" {{ block.shopify_attributes }}>{{ b.texto }}</div>
+            {%- endif -%}
+          {%- when 'botoes' -%}
+            {%- if b.rotulo_1 != blank or b.rotulo_2 != blank -%}
+              <div class="ads-hd__botoes" style="--espaco: {{ b.espaco_acima }}px; --altura: {{ b.altura }}px; --padding: {{ b.padding }}px; --raio: {{ b.raio }}px; --tamanho: {{ b.tamanho }}px; --inicio: {{ b.cor_inicio }}; --fim: {{ b.cor_fim }}; --texto-1: {{ b.cor_texto }}; --borda-1: {{ b.cor_borda }}; --cor-sombra: {{ b.cor_sombra }}; --opacidade-sombra: {{ b.opacidade_sombra }}%; --sombra: {{ b.sombra }}px; --fundo-2: {% if b.estilo_2 == 'contorno' %}transparent{% else %}color-mix(in srgb, {{ b.cor_2 }} 50%, transparent){% endif %}; --borda-2: {{ b.cor_2_borda }}; --opacidade-borda-2: {{ b.opacidade_borda_2 }}%; --texto-2: {{ b.cor_2_texto }}; --mobile: {% if b.largura_total_mobile %}stretch{% else %}center{% endif %};" {{ block.shopify_attributes }}>
+                {%- if b.rotulo_1 != blank -%}
+                  <a class="ads-hd__botao ads-hd__botao--1 ads-r-botao-1" href="{{ b.link_1 | default: '#' }}">{{ b.rotulo_1 }}{%- if b.icones -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>{%- endif -%}</a>
+                {%- endif -%}
+                {%- if b.rotulo_2 != blank -%}
+                  <a class="ads-hd__botao ads-hd__botao--2 ads-r-botao-2" href="{{ b.link_2 | default: '#' }}">{%- if b.icones -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z"/></svg>{%- endif -%}{{ b.rotulo_2 }}</a>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+          {%- when 'nota' -%}
+            {%- if b.texto != blank -%}
+              <p class="ads-hd__nota ads-r-nota" style="--cor: {{ b.cor }}; --tamanho: {{ b.tamanho }}px; --espaco: {{ b.espaco_acima }}px;" {{ block.shopify_attributes }}>{{ b.texto }}</p>
+            {%- endif -%}
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+    {%- if s.imagem != blank or s.forma_imagem != 'nenhuma' or request.design_mode -%}
+      <div class="ads-hd__midia{% if s.forma_imagem != 'nenhuma' %} ads-hd__midia--forma{% endif %} ads-r-imagem">
+        {%- if s.imagem != blank -%}
+          {{ s.imagem | image_url: width: 1120 | image_tag: alt: s.imagem.alt, loading: 'eager', sizes: '(min-width: 750px) 50vw, 100vw' }}
+        {%- elsif request.design_mode and s.forma_imagem == 'nenhuma' -%}
+          <div class="ads-hd__moldura">{{ 'Imagem do hero' }}</div>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+    {%- if n_recursos > 0 -%}
+      {%- assign i_recurso = s.indice_cartoes -%}
+      <ul class="ads-hd__recursos">
+        {%- for block in section.blocks -%}
+          {%- if block.type != 'recurso' -%}{%- continue -%}{%- endif -%}
+          {%- assign i_recurso = i_recurso | plus: 1 -%}
+          <li class="ads-hd__recurso ads-r-cartao-{{ i_recurso }}" {{ block.shopify_attributes }}>
+            <span class="ads-hd__icone">
+              {%- case block.settings.icone -%}
+                {%- when 'busca' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+                {%- when 'pasta' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/></svg>
+                {%- when 'estrela' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.8 6.6 19.5l1.2-6-4.5-4.2 6.1-.7z"/></svg>
+                {%- when 'escudo' -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>
+                {%- else -%}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+              {%- endcase -%}
+            </span>
+            <span>
+              <span class="ads-hd__recurso-titulo">{{ block.settings.titulo }}</span>
+              <span class="ads-hd__recurso-texto">{{ block.settings.texto }}</span>
+            </span>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "ADS Hero dividido",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    { "type": "header", "content": "Imagem" },
+    { "type": "image_picker", "id": "imagem", "label": "Imagem" },
+    { "type": "select", "id": "forma_imagem", "label": "Forma da imagem", "options": [ { "value": "nenhuma", "label": "Nenhuma" }, { "value": "organica", "label": "Orgânica" }, { "value": "arredondada", "label": "Arredondada" } ], "default": "nenhuma" },
+    { "type": "color", "id": "cor_forma", "label": "Cor da forma", "default": "#e0e0e0" },
+    { "type": "range", "id": "largura_imagem", "label": "Largura (desktop)", "min": 240, "max": 720, "step": 8, "unit": "px", "default": 560 },
+    { "type": "range", "id": "largura_imagem_mobile", "label": "Largura (celular)", "min": 160, "max": 400, "step": 4, "unit": "px", "default": 300 },
+    { "type": "select", "id": "proporcao_imagem", "label": "Proporção", "options": [ { "value": "1", "label": "1:1" }, { "value": "5 / 6", "label": "5:6" }, { "value": "4 / 5", "label": "4:5" }, { "value": "3 / 4", "label": "3:4" } ], "default": "1" },
+    { "type": "select", "id": "proporcao_imagem_mobile", "label": "Proporção (celular)", "options": [ { "value": "1", "label": "1:1" }, { "value": "5 / 6", "label": "5:6" }, { "value": "4 / 5", "label": "4:5" }, { "value": "3 / 4", "label": "3:4" } ], "default": "1" },
+    { "type": "range", "id": "deslocamento_imagem", "label": "Deslocamento vertical", "min": -100, "max": 200, "step": 4, "unit": "px", "default": 0 },
+    { "type": "checkbox", "id": "mostrar_pedestal", "label": "Pedestal de brilho sob a imagem", "default": false },
+    { "type": "header", "content": "Fundo" },
+    { "type": "select", "id": "fundo", "label": "Tipo", "options": [ { "value": "solido", "label": "Cor sólida" }, { "value": "brilhos", "label": "Gradiente com brilhos" } ], "default": "solido" },
+    { "type": "color", "id": "cor_fundo", "label": "Cor", "default": "#ffffff" },
+    { "type": "color", "id": "cor_fundo_2", "label": "Cor do meio (gradiente)", "default": "#f4f4f4" },
+    { "type": "color", "id": "cor_fundo_3", "label": "Cor da base (gradiente)", "default": "#eeeeee" },
+    { "type": "color", "id": "cor_realce", "label": "Brilho principal", "default": "#cccccc" },
+    { "type": "color", "id": "cor_realce_2", "label": "Brilho secundário", "default": "#dddddd" },
+    { "type": "color", "id": "cor_texto", "label": "Cor do texto da seção", "default": "#3a3a3a" },
+    { "type": "header", "content": "Cartões de recurso" },
+    { "type": "color", "id": "cor_cartao", "label": "Fundo (início)", "default": "#f4f4f4" },
+    { "type": "color", "id": "cor_cartao_2", "label": "Fundo (fim)", "default": "#eeeeee" },
+    { "type": "color", "id": "cor_titulo_cartao", "label": "Título", "default": "#121212" },
+    { "type": "color", "id": "cor_texto_cartao", "label": "Texto", "default": "#555555" },
+    { "type": "color", "id": "cor_icone", "label": "Ícone (início)", "default": "#121212" },
+    { "type": "color", "id": "cor_icone_2", "label": "Ícone (fim)", "default": "#333333" },
+    { "type": "range", "id": "raio_cartao", "label": "Arredondamento", "min": 0, "max": 32, "step": 1, "unit": "px", "default": 16 },
+    { "type": "range", "id": "indice_cartoes", "label": "Numeração dos cartões (comparação)", "min": 0, "max": 6, "step": 1, "default": 0, "info": "Uso técnico da comparação visual; não altera a aparência." },
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "largura_conteudo", "label": "Largura do conteúdo", "min": 960, "max": 1440, "step": 8, "unit": "px", "default": 1216 },
+    { "type": "range", "id": "proporcao_texto", "label": "Largura da coluna de texto", "min": 40, "max": 70, "step": 1, "unit": "%", "default": 54 },
+    { "type": "select", "id": "alinhamento_vertical", "label": "Alinhamento vertical", "options": [ { "value": "start", "label": "Topo" }, { "value": "center", "label": "Centro" } ], "default": "start" },
+    { "type": "range", "id": "espaco_topo", "label": "Espaço superior (desktop)", "min": 0, "max": 200, "step": 2, "unit": "px", "default": 42 },
+    { "type": "range", "id": "espaco_topo_mobile", "label": "Espaço superior (celular)", "min": 0, "max": 160, "step": 2, "unit": "px", "default": 32 },
+    { "type": "range", "id": "espaco_base", "label": "Espaço inferior", "min": 0, "max": 200, "step": 2, "unit": "px", "default": 20 },
+    { "type": "range", "id": "espaco_imagem_mobile", "label": "Espaço acima da imagem (celular)", "min": 0, "max": 120, "step": 2, "unit": "px", "default": 48 },
+    { "type": "range", "id": "espaco_recursos", "label": "Espaço acima dos cartões", "min": 0, "max": 120, "step": 2, "unit": "px", "default": 38 }
+  ],
+  "blocks": [
+    {
+      "type": "selo", "name": "Selo", "limit": 1,
+      "settings": [
+        { "type": "text", "id": "texto", "label": "Texto" },
+        { "type": "color", "id": "cor_inicio", "label": "Fundo (início)", "default": "#f5f5f5" },
+        { "type": "color", "id": "cor_fim", "label": "Fundo (fim)", "default": "#eeeeee" },
+        { "type": "color", "id": "cor_borda", "label": "Borda", "default": "#999999" },
+        { "type": "color", "id": "cor_texto", "label": "Texto", "default": "#333333" },
+        { "type": "range", "id": "tamanho", "label": "Tamanho do texto", "min": 10, "max": 16, "step": 1, "unit": "px", "default": 12 },
+        { "type": "range", "id": "espaco_abaixo", "label": "Espaço abaixo", "min": 0, "max": 160, "step": 2, "unit": "px", "default": 24 }
+      ]
+    },
+    {
+      "type": "titulo", "name": "Título", "limit": 1,
+      "settings": [
+        { "type": "text", "id": "titulo", "label": "Título", "default": "Título principal" },
+        { "type": "text", "id": "titulo_destaque", "label": "Parte em destaque" },
+        { "type": "color", "id": "cor", "label": "Cor", "default": "#121212" },
+        { "type": "select", "id": "destaque_estilo", "label": "Estilo do destaque", "options": [ { "value": "solido", "label": "Cor sólida" }, { "value": "gradiente", "label": "Gradiente" } ], "default": "solido" },
+        { "type": "color", "id": "destaque_inicio", "label": "Destaque — cor (início)", "default": "#555555" },
+        { "type": "color", "id": "destaque_fim", "label": "Destaque — fim do gradiente", "default": "#777777" },
+        { "type": "checkbox", "id": "italico", "label": "Itálico", "default": false },
+        { "type": "select", "id": "peso", "label": "Peso", "options": [ { "value": "300", "label": "Leve" }, { "value": "400", "label": "Regular" }, { "value": "600", "label": "Seminegrito" }, { "value": "700", "label": "Negrito" } ], "default": "700" },
+        { "type": "range", "id": "tamanho", "label": "Tamanho (desktop)", "min": 32, "max": 100, "step": 1, "unit": "px", "default": 57 },
+        { "type": "range", "id": "tamanho_mobile", "label": "Tamanho (celular)", "min": 24, "max": 64, "step": 1, "unit": "px", "default": 40 },
+        { "type": "range", "id": "entrelinha", "label": "Entrelinha", "min": 85, "max": 130, "step": 1, "unit": "%", "default": 100 },
+        { "type": "range", "id": "espacamento", "label": "Espaçamento entre letras", "min": -40, "max": 40, "step": 1, "unit": "‰", "default": -20 },
+        { "type": "range", "id": "espaco_partes", "label": "Espaço entre as partes", "min": 0, "max": 24, "step": 1, "unit": "px", "default": 0 },
+        { "type": "range", "id": "largura", "label": "Largura máxima", "min": 8, "max": 30, "step": 1, "unit": "ch", "default": 22 }
+      ]
+    },
+    {
+      "type": "texto", "name": "Texto", "limit": 1,
+      "settings": [
+        { "type": "richtext", "id": "texto", "label": "Texto" },
+        { "type": "color", "id": "cor", "label": "Cor", "default": "#3a3a3a" },
+        { "type": "range", "id": "tamanho", "label": "Tamanho", "min": 14, "max": 24, "step": 1, "unit": "px", "default": 18 },
+        { "type": "range", "id": "largura", "label": "Largura máxima", "min": 280, "max": 720, "step": 8, "unit": "px", "default": 544 },
+        { "type": "range", "id": "espaco_acima", "label": "Espaço acima", "min": 0, "max": 60, "step": 2, "unit": "px", "default": 16 }
+      ]
+    },
+    {
+      "type": "botoes", "name": "Botões", "limit": 1,
+      "settings": [
+        { "type": "text", "id": "rotulo_1", "label": "Botão 1 — rótulo" },
+        { "type": "url", "id": "link_1", "label": "Botão 1 — link" },
+        { "type": "text", "id": "rotulo_2", "label": "Botão 2 — rótulo" },
+        { "type": "url", "id": "link_2", "label": "Botão 2 — link" },
+        { "type": "checkbox", "id": "icones", "label": "Ícones nos botões", "default": false },
+        { "type": "color", "id": "cor_inicio", "label": "Botão 1 — fundo (início)", "default": "#121212" },
+        { "type": "color", "id": "cor_fim", "label": "Botão 1 — fundo (fim)", "default": "#121212" },
+        { "type": "color", "id": "cor_texto", "label": "Botão 1 — texto", "default": "#ffffff" },
+        { "type": "color", "id": "cor_borda", "label": "Botão 1 — borda", "default": "#121212" },
+        { "type": "color", "id": "cor_sombra", "label": "Botão 1 — sombra", "default": "#121212" },
+        { "type": "range", "id": "opacidade_sombra", "label": "Botão 1 — intensidade da sombra", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 0 },
+        { "type": "range", "id": "sombra", "label": "Botão 1 — distância da sombra", "min": 0, "max": 30, "step": 1, "unit": "px", "default": 14 },
+        { "type": "select", "id": "estilo_2", "label": "Botão 2 — estilo", "options": [ { "value": "translucido", "label": "Translúcido" }, { "value": "contorno", "label": "Contorno" } ], "default": "contorno" },
+        { "type": "color", "id": "cor_2", "label": "Botão 2 — fundo", "default": "#ffffff" },
+        { "type": "color", "id": "cor_2_borda", "label": "Botão 2 — borda", "default": "#121212" },
+        { "type": "range", "id": "opacidade_borda_2", "label": "Botão 2 — opacidade da borda", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 100 },
+        { "type": "color", "id": "cor_2_texto", "label": "Botão 2 — texto", "default": "#121212" },
+        { "type": "range", "id": "raio", "label": "Arredondamento", "min": 0, "max": 100, "step": 1, "unit": "px", "default": 14 },
+        { "type": "range", "id": "altura", "label": "Altura", "min": 36, "max": 72, "step": 1, "unit": "px", "default": 56 },
+        { "type": "range", "id": "padding", "label": "Espaço interno", "min": 12, "max": 60, "step": 2, "unit": "px", "default": 28 },
+        { "type": "range", "id": "tamanho", "label": "Tamanho do texto", "min": 12, "max": 20, "step": 1, "unit": "px", "default": 16 },
+        { "type": "checkbox", "id": "largura_total_mobile", "label": "Largura total no celular", "default": true },
+        { "type": "range", "id": "espaco_acima", "label": "Espaço acima", "min": 0, "max": 120, "step": 2, "unit": "px", "default": 32 }
+      ]
+    },
+    {
+      "type": "nota", "name": "Nota", "limit": 1,
+      "settings": [
+        { "type": "text", "id": "texto", "label": "Texto" },
+        { "type": "color", "id": "cor", "label": "Cor", "default": "#777777" },
+        { "type": "range", "id": "tamanho", "label": "Tamanho", "min": 11, "max": 18, "step": 1, "unit": "px", "default": 14 },
+        { "type": "range", "id": "espaco_acima", "label": "Espaço acima", "min": 0, "max": 60, "step": 2, "unit": "px", "default": 24 }
+      ]
+    },
+    {
+      "type": "recurso", "name": "Cartão de recurso", "limit": 3,
+      "settings": [
+        { "type": "select", "id": "icone", "label": "Ícone", "options": [ { "value": "envelope", "label": "Envelope" }, { "value": "busca", "label": "Busca" }, { "value": "pasta", "label": "Pasta" }, { "value": "estrela", "label": "Estrela" }, { "value": "escudo", "label": "Escudo" } ], "default": "envelope" },
+        { "type": "text", "id": "titulo", "label": "Título", "default": "Recurso" },
+        { "type": "text", "id": "texto", "label": "Texto" }
+      ]
+    }
+  ],
+  "max_blocks": 8,
+  "presets": [
+    { "name": "ADS Hero dividido", "blocks": [ { "type": "titulo" }, { "type": "texto" }, { "type": "botoes" } ] }
+  ]
+}
+{% endschema %}

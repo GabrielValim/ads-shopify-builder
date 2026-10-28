@@ -1,0 +1,52 @@
+{%- comment -%}
+  ADS AutoStore: ads-font-variants 1.0.0 (snippet do tema-base; renderizado no layout).
+
+  Declara @font-face das DEMAIS variantes existentes das famílias de título e de corpo escolhidas no tema
+  (settings.type_header_font e settings.type_body_font). Assim, pesos e estilos usados pelas seções são
+  renderizados com a face real, e não com síntese do navegador.
+  - Genérico: não cita famílias nem handles; depende só das duas configurações do tema.
+  - Só variantes de `font.variants`, que existem por construção. Fontes de sistema são ignoradas.
+  - Não repete as faces que o layout do Dawn já declara: corpo, negrito, itálico, negrito itálico e título
+    (mesmas derivações por font_modify do layout).
+  - O navegador só baixa uma face quando algum texto a usa.
+  Uso: dentro do bloco style do layout, logo depois das faces declaradas pelo Dawn.
+{%- endcomment -%}
+{%- assign ads_fv_header = settings.type_header_font -%}
+{%- assign ads_fv_body = settings.type_body_font -%}
+{%- assign ads_fv_body_bold = ads_fv_body | font_modify: 'weight', 'bold' -%}
+{%- assign ads_fv_body_italic = ads_fv_body | font_modify: 'style', 'italic' -%}
+{%- assign ads_fv_body_bold_italic = ads_fv_body_bold | font_modify: 'style', 'italic' -%}
+{%- assign ads_fv_seen = '|' -%}
+{%- if ads_fv_body -%}
+  {%- assign ads_fv_seen = ads_fv_seen | append: ads_fv_body.family | append: ':' | append: ads_fv_body.style | append: ':' | append: ads_fv_body.weight | append: '|' -%}
+{%- endif -%}
+{%- if ads_fv_body_bold -%}
+  {%- assign ads_fv_seen = ads_fv_seen | append: ads_fv_body_bold.family | append: ':' | append: ads_fv_body_bold.style | append: ':' | append: ads_fv_body_bold.weight | append: '|' -%}
+{%- endif -%}
+{%- if ads_fv_body_italic -%}
+  {%- assign ads_fv_seen = ads_fv_seen | append: ads_fv_body_italic.family | append: ':' | append: ads_fv_body_italic.style | append: ':' | append: ads_fv_body_italic.weight | append: '|' -%}
+{%- endif -%}
+{%- if ads_fv_body_bold_italic -%}
+  {%- assign ads_fv_seen = ads_fv_seen | append: ads_fv_body_bold_italic.family | append: ':' | append: ads_fv_body_bold_italic.style | append: ':' | append: ads_fv_body_bold_italic.weight | append: '|' -%}
+{%- endif -%}
+{%- if ads_fv_header -%}
+  {%- assign ads_fv_seen = ads_fv_seen | append: ads_fv_header.family | append: ':' | append: ads_fv_header.style | append: ':' | append: ads_fv_header.weight | append: '|' -%}
+{%- endif -%}
+{%- for ads_fv_variant in ads_fv_header.variants -%}
+  {%- assign ads_fv_key = '|' | append: ads_fv_variant.family | append: ':' | append: ads_fv_variant.style | append: ':' | append: ads_fv_variant.weight | append: '|' -%}
+  {%- unless ads_fv_seen contains ads_fv_key -%}
+    {%- unless ads_fv_variant.system? -%}
+      {{ ads_fv_variant | font_face: font_display: 'swap' }}
+    {%- endunless -%}
+    {%- assign ads_fv_seen = ads_fv_seen | append: ads_fv_key -%}
+  {%- endunless -%}
+{%- endfor -%}
+{%- for ads_fv_variant in ads_fv_body.variants -%}
+  {%- assign ads_fv_key = '|' | append: ads_fv_variant.family | append: ':' | append: ads_fv_variant.style | append: ':' | append: ads_fv_variant.weight | append: '|' -%}
+  {%- unless ads_fv_seen contains ads_fv_key -%}
+    {%- unless ads_fv_variant.system? -%}
+      {{ ads_fv_variant | font_face: font_display: 'swap' }}
+    {%- endunless -%}
+    {%- assign ads_fv_seen = ads_fv_seen | append: ads_fv_key -%}
+  {%- endunless -%}
+{%- endfor -%}

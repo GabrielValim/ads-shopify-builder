@@ -1,0 +1,96 @@
+{%- comment -%}
+  ADS Faixa de ícones 1.0.1 (biblioteca do núcleo ADS Shopify Builder).
+  Faixa compacta de diferenciais: até 6 itens (ícone próprio + rótulo; descrição opcional), em grade.
+  Valores de cada loja ficam no template. Sem JavaScript, sem URL externa, CSS com escopo da seção.
+{%- endcomment -%}
+{%- assign s = section.settings -%}
+<style>
+  #shopify-section-{{ section.id }} .ads-fi {
+    padding: {{ s.espaco_vertical }}px 24px;
+    background: color-mix(in srgb, {{ s.cor_fundo }} {{ s.opacidade_fundo }}%, {{ s.cor_pagina }});
+    {%- if s.borda_superior %} border-top: 1px solid color-mix(in srgb, {{ s.cor_borda }} {{ s.opacidade_borda }}%, transparent);{% endif %}
+    {%- if s.borda_inferior %} border-bottom: 1px solid color-mix(in srgb, {{ s.cor_borda }} {{ s.opacidade_borda }}%, transparent);{% endif %}
+    font-family: var(--font-body-family);
+  }
+  #shopify-section-{{ section.id }} .ads-fi__grade { max-width: {{ s.largura_conteudo }}px; margin: 0 auto; padding: 0; list-style: none; display: grid; grid-template-columns: repeat({{ s.colunas }}, minmax(0, 1fr)); gap: {{ s.espaco_colunas }}px; }
+  #shopify-section-{{ section.id }} .ads-fi__item { display: flex; align-items: center; justify-content: {{ s.alinhamento }}; gap: {{ s.espaco_icone }}px; color: {{ s.cor_texto }}; }
+  #shopify-section-{{ section.id }} .ads-fi__icone { flex: none; width: {{ s.tamanho_icone }}px; height: {{ s.tamanho_icone }}px; color: {{ s.cor_icone }}; }
+  #shopify-section-{{ section.id }} .ads-fi__rotulo { font-size: {{ s.tamanho_texto }}px; font-weight: {{ s.peso_texto }}; line-height: 1.25; }
+  #shopify-section-{{ section.id }} .ads-fi__descricao { display: block; margin-top: 2px; font-size: {{ s.tamanho_texto | minus: 1 }}px; font-weight: 400; line-height: 1.4; opacity: 0.85; }
+  #shopify-section-{{ section.id }} .ads-fi__descricao p { margin: 0; }
+  @media screen and (max-width: 749px) {
+    #shopify-section-{{ section.id }} .ads-fi__grade { grid-template-columns: repeat({{ s.colunas_mobile }}, minmax(0, 1fr)); gap: {{ s.espaco_linhas_mobile }}px {{ s.espaco_colunas_mobile }}px; }
+  }
+</style>
+
+<div class="ads-fi">
+  <ul class="ads-fi__grade ads-r-grupo-itens">
+    {%- for block in section.blocks -%}
+      <li class="ads-fi__item ads-r-item-{{ forloop.index }}" {{ block.shopify_attributes }}>
+        <svg class="ads-fi__icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          {%- case block.settings.icone -%}
+            {%- when 'caminhao' -%}<path d="M3 6h11v9H3zM14 9h4l3 3v3h-7"/><circle cx="7" cy="17" r="1.8"/><circle cx="17" cy="17" r="1.8"/>
+            {%- when 'setas' -%}<path d="M4 9h13l-3-3M20 15H7l3 3"/>
+            {%- when 'cadeado' -%}<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+            {%- when 'balao' -%}<path d="M4 5h16v11H9l-5 4z"/>
+            {%- when 'medalha' -%}<circle cx="12" cy="9" r="5"/><path d="M9 13l-2 8 5-3 5 3-2-8"/>
+            {%- when 'coracao' -%}<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>
+            {%- when 'estrela' -%}<path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.8 6.6 19.5l1.2-6-4.5-4.2 6.1-.7z"/>
+            {%- else -%}<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>
+          {%- endcase -%}
+        </svg>
+        <span>
+          <span class="ads-fi__rotulo">{{ block.settings.titulo }}</span>
+          {%- if s.mostrar_descricao and block.settings.texto != blank -%}<span class="ads-fi__descricao">{{ block.settings.texto }}</span>{%- endif -%}
+        </span>
+      </li>
+    {%- endfor -%}
+  </ul>
+</div>
+
+{% schema %}
+{
+  "name": "ADS Faixa de ícones",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    { "type": "header", "content": "Cores" },
+    { "type": "color", "id": "cor_fundo", "label": "Fundo", "default": "#f5f5f5" },
+    { "type": "range", "id": "opacidade_fundo", "label": "Intensidade do fundo", "min": 0, "max": 100, "step": 5, "unit": "%", "default": 100 },
+    { "type": "color", "id": "cor_pagina", "label": "Cor da página (sob o fundo)", "default": "#ffffff" },
+    { "type": "color", "id": "cor_icone", "label": "Ícones", "default": "#121212" },
+    { "type": "color", "id": "cor_texto", "label": "Texto", "default": "#3a3a3a" },
+    { "type": "color", "id": "cor_borda", "label": "Bordas", "default": "#121212" },
+    { "type": "range", "id": "opacidade_borda", "label": "Opacidade das bordas", "min": 0, "max": 100, "step": 1, "unit": "%", "default": 12 },
+    { "type": "checkbox", "id": "borda_superior", "label": "Borda superior", "default": true },
+    { "type": "checkbox", "id": "borda_inferior", "label": "Borda inferior", "default": false },
+    { "type": "header", "content": "Conteúdo" },
+    { "type": "checkbox", "id": "mostrar_descricao", "label": "Mostrar descrições", "default": false },
+    { "type": "range", "id": "tamanho_texto", "label": "Tamanho do texto", "min": 11, "max": 18, "step": 1, "unit": "px", "default": 13 },
+    { "type": "select", "id": "peso_texto", "label": "Peso do texto", "options": [ { "value": "400", "label": "Regular" }, { "value": "500", "label": "Médio" }, { "value": "600", "label": "Seminegrito" } ], "default": "500" },
+    { "type": "range", "id": "tamanho_icone", "label": "Tamanho dos ícones", "min": 14, "max": 32, "step": 1, "unit": "px", "default": 18 },
+    { "type": "range", "id": "espaco_icone", "label": "Espaço ícone–texto", "min": 4, "max": 20, "step": 1, "unit": "px", "default": 10 },
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "colunas", "label": "Colunas (desktop)", "min": 2, "max": 6, "step": 1, "default": 4 },
+    { "type": "select", "id": "colunas_mobile", "label": "Colunas (celular)", "options": [ { "value": "1", "label": "1" }, { "value": "2", "label": "2" } ], "default": "2" },
+    { "type": "select", "id": "alinhamento", "label": "Alinhamento dos itens", "options": [ { "value": "flex-start", "label": "Esquerda" }, { "value": "center", "label": "Centro" } ], "default": "center" },
+    { "type": "range", "id": "largura_conteudo", "label": "Largura do conteúdo", "min": 720, "max": 1440, "step": 20, "unit": "px", "default": 1100 },
+    { "type": "range", "id": "espaco_vertical", "label": "Espaço vertical", "min": 8, "max": 80, "step": 1, "unit": "px", "default": 25 },
+    { "type": "range", "id": "espaco_colunas", "label": "Espaço entre colunas", "min": 0, "max": 64, "step": 2, "unit": "px", "default": 32 },
+    { "type": "range", "id": "espaco_colunas_mobile", "label": "Espaço entre colunas (celular)", "min": 0, "max": 40, "step": 2, "unit": "px", "default": 16 },
+    { "type": "range", "id": "espaco_linhas_mobile", "label": "Espaço entre linhas (celular)", "min": 0, "max": 40, "step": 2, "unit": "px", "default": 16 }
+  ],
+  "blocks": [
+    {
+      "type": "item", "name": "Item",
+      "settings": [
+        { "type": "select", "id": "icone", "label": "Ícone", "options": [ { "value": "escudo", "label": "Escudo" }, { "value": "caminhao", "label": "Caminhão" }, { "value": "setas", "label": "Troca" }, { "value": "cadeado", "label": "Cadeado" }, { "value": "balao", "label": "Mensagem" }, { "value": "medalha", "label": "Medalha" }, { "value": "coracao", "label": "Coração" }, { "value": "estrela", "label": "Estrela" } ], "default": "escudo" },
+        { "type": "text", "id": "titulo", "label": "Rótulo", "default": "Diferencial" },
+        { "type": "richtext", "id": "texto", "label": "Descrição (opcional)" }
+      ]
+    }
+  ],
+  "max_blocks": 6,
+  "presets": [ { "name": "ADS Faixa de ícones", "blocks": [ { "type": "item" }, { "type": "item" }, { "type": "item" }, { "type": "item" } ] } ]
+}
+{% endschema %}
