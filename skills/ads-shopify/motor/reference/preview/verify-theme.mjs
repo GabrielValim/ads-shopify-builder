@@ -5,7 +5,7 @@
 
 import { createHash } from "node:crypto";
 import { lstat, readFile, readdir } from "node:fs/promises";
-import { join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
 
 import { ErrorCodes, ReferenceEngineError } from "../core/errors.mjs";
 import { verifyPackAssets } from "../assets/assets.mjs";
@@ -421,7 +421,7 @@ async function resolveGenerationContent(generation, { contentPath, archiveDir })
 async function analysisRunAvailable(generation) {
     const { analysisRunId, analysisManifestSha256 } = generation.plan.provenance;
     if (!analysisRunId) return false;
-    const host = generation.dir.split("/").slice(-2, -1)[0];
+    const host = basename(dirname(generation.dir));
     const dir = join(generation.dir, "..", "..", "..", "analyses", host, analysisRunId);
     try {
         const buffer = await readRegularFile(dir, "manifest.json", 2 * 1024 * 1024);

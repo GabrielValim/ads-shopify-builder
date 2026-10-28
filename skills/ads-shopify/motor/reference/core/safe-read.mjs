@@ -7,7 +7,7 @@
 import { createHash } from "node:crypto";
 import { constants } from "node:fs";
 import { lstat, open, realpath } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 
 import { ErrorCodes, ReferenceEngineError } from "./errors.mjs";
 
@@ -72,6 +72,6 @@ export async function readStandaloneFile(path, maxBytes) {
     }
     if (info.isSymbolicLink()) throw fail(ErrorCodes.ARTIFACT_PATH_INVALID, "Symlink não permitido");
     const real = await realpath(path);
-    const dir = real.slice(0, real.lastIndexOf("/")) || "/";
-    return readRegularFile(dir, real.slice(real.lastIndexOf("/") + 1), maxBytes);
+    const dir = dirname(real);
+    return readRegularFile(dir, basename(real), maxBytes);
 }

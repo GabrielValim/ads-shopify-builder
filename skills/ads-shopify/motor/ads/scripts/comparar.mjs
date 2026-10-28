@@ -7,12 +7,13 @@
  *  - tabela elemento × propriedade: papéis da especificação × elementos da prévia com a classe `ads-r-<papel>`.
  * Uso: node comparar.mjs <captura-ref> <especificacao.json> <previa-dir> <saida-dir>
  */
+import { pathToFileURL } from "node:url";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const ROOT = resolve(process.env.ADS_MOTOR_ROOT ?? join(import.meta.dirname, "../../../.."));
-const { decodePng, encodePng } = await import(join(ROOT, "reference/compare/png.mjs"));
-const { crop, diffImage, gridSimilarity, sideBySide } = await import(join(ROOT, "reference/compare/image-ops.mjs"));
+const { decodePng, encodePng } = await import(pathToFileURL(join(ROOT, "reference/compare/png.mjs")).href);
+const { crop, diffImage, gridSimilarity, sideBySide } = await import(pathToFileURL(join(ROOT, "reference/compare/image-ops.mjs")).href);
 
 const [cap, specPath, prevDir, outDir] = process.argv.slice(2);
 if (!cap || !specPath || !prevDir || !outDir) { console.error("uso: comparar.mjs <captura-ref> <especificacao.json> <previa-dir> <saida-dir>"); process.exit(2); }
