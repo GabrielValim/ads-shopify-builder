@@ -7,14 +7,27 @@
  */
 
 import { execFile } from "node:child_process";
-import { relative, sep } from "node:path";
+import { existsSync } from "node:fs";
+import { join, relative, sep } from "node:path";
 import { promisify } from "node:util";
 
 const run = promisify(execFile);
 
+// Variaveis que o Windows exige para qualquer processo filho (e que a CLI da
+// Shopify usa para achar a sessao de login). Em POSIX o filtro nao acrescenta nada.
+const ENV_SISTEMA = ["SystemRoot", "windir", "COMSPEC", "PATHEXT", "APPDATA", "LOCALAPPDATA", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "TEMP", "TMP"];
+const envSistema = () => Object.fromEntries(ENV_SISTEMA.filter((k) => process.env[k] !== undefined).map((k) => [k, process.env[k]]));
+
+// A CLI da Shopify fica dentro do motor, nao no PATH. Chamar o entrypoint JS
+// com o Node atual evita depender do PATH e dos atalhos .cmd do Windows.
+const CLI_ENTRY = join(import.meta.dirname, "..", "..", "node_modules", "@shopify", "cli", "bin", "run.js");
+const CLI = existsSync(CLI_ENTRY) ? [process.execPath, CLI_ENTRY] : ["shopify"];
+const runCli = (args, opts) => run(CLI[0], [...CLI.slice(1), ...args], opts);
+
 const ENV = {
     PATH: process.env.PATH,
     HOME: process.env.HOME,
+    ...envSistema(),
     SHOPIFY_CLI_NO_ANALYTICS: "1",
     NO_COLOR: "1",
     CI: "1",
@@ -22,7 +35,7 @@ const ENV = {
 
 export async function themeCheckAvailable() {
     try {
-        const { stdout } = await run("shopify", ["version"], { env: ENV, timeout: 60_000 });
+        const { stdout } = await runCli(["version"], { env: ENV, timeout: 60_000 });
         return stdout.trim().split("\n").pop();
     } catch {
         return null;
@@ -35,7 +48,7 @@ export async function themeCheckAvailable() {
 export async function runThemeCheck(themeDir) {
     let stdout;
     try {
-        ({ stdout } = await run("shopify", ["theme", "check", "--path", themeDir, "--output", "json", "--no-color"], {
+        ({ stdout } = await runCli(["theme", "check", "--path", themeDir, "--output", "json", "--no-color"], {
             env: ENV,
             timeout: 300_000,
             maxBuffer: 64 * 1024 * 1024,

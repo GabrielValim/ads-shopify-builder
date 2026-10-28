@@ -20,6 +20,7 @@
  *   abrir     <slug>                       links de prévia e editor do rascunho
  * Shopify: CLI autenticada do operador (`shopify`); ADS_SHOPIFY_STUB=<script> usa uma loja SIMULADA (testes).
  */
+import { pathToFileURL } from "node:url";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { appendFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -28,7 +29,14 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 const ROOT = resolve(process.env.ADS_MOTOR_ROOT ?? join(import.meta.dirname, "../../../.."));
 const PROJETOS = resolve(process.env.ADS_PROJETOS_DIR ?? join(ROOT, "runs/ads-shopify/projetos"));
 const STUB = process.env.ADS_SHOPIFY_STUB ?? null;
-const SHOPIFY = STUB ? [process.execPath, STUB] : ["shopify"];
+// Variaveis que o Windows exige para qualquer processo filho (e que a CLI da
+// Shopify usa para achar a sessao de login). Em POSIX o filtro nao acrescenta nada.
+const ENV_SISTEMA = ["SystemRoot", "windir", "COMSPEC", "PATHEXT", "APPDATA", "LOCALAPPDATA", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "TEMP", "TMP"];
+const envSistema = () => Object.fromEntries(ENV_SISTEMA.filter((k) => process.env[k] !== undefined).map((k) => [k, process.env[k]]));
+// a CLI da Shopify vive dentro do motor; chamar o entrypoint JS com o Node atual
+// funciona em Windows, macOS e Linux sem depender do PATH nem de atalhos .cmd
+const CLI_SHOPIFY = join(ROOT, "node_modules", "@shopify", "cli", "bin", "run.js");
+const SHOPIFY = STUB ? [process.execPath, STUB] : existsSync(CLI_SHOPIFY) ? [process.execPath, CLI_SHOPIFY] : ["shopify"];
 
 const [cmd, slug, ...rest] = process.argv.slice(2);
 const opt = (k, d = null) => { const i = rest.indexOf(k); return i >= 0 ? rest[i + 1] : d; };
@@ -91,8 +99,8 @@ const pick = (log, re) => { const m = log.match(re); return m ? relative(ROOT, r
 
 // ---------------- validação do tema inteiro ----------------
 async function validarTema(dir, base) {
-    const { ThemeSchema, validateTemplate, validateSettingsData } = await import(join(ROOT, "reference/generator/dawn-schema.mjs"));
-    const { runThemeCheck, compareOffenses } = await import(join(ROOT, "reference/generator/theme-check.mjs"));
+    const { ThemeSchema, validateTemplate, validateSettingsData } = await import(pathToFileURL(join(ROOT, "reference/generator/dawn-schema.mjs")).href);
+    const { runThemeCheck, compareOffenses } = await import(pathToFileURL(join(ROOT, "reference/generator/theme-check.mjs")).href);
     const problemas = [];
     const theme = await ThemeSchema.load(dir);
     const data = readJson(join(dir, "config/settings_data.json"));
@@ -147,7 +155,7 @@ function salvarVersao(p, { nota, solicitacao = null, validacao, origem = "edicao
 
 // ---------------- Shopify ----------------
 function shopify(args, logName, timeout = 900_000) {
-    const r = spawnSync(SHOPIFY[0], [...SHOPIFY.slice(1), ...args], { cwd: ROOT, encoding: "utf8", timeout, maxBuffer: 64 << 20, env: { PATH: process.env.PATH, HOME: process.env.HOME, NO_COLOR: "1", SHOPIFY_CLI_NO_ANALYTICS: "1", ...(STUB ? { ADS_STUB_LOJA: process.env.ADS_STUB_LOJA ?? "" } : {}) } });
+    const r = spawnSync(SHOPIFY[0], [...SHOPIFY.slice(1), ...args], { cwd: ROOT, encoding: "utf8", timeout, maxBuffer: 64 << 20, env: { PATH: process.env.PATH, HOME: process.env.HOME, ...envSistema(), NO_COLOR: "1", SHOPIFY_CLI_NO_ANALYTICS: "1", ...(STUB ? { ADS_STUB_LOJA: process.env.ADS_STUB_LOJA ?? "" } : {}) } });
     mkdirSync(pj("remoto", "logs"), { recursive: true });
     writeFileSync(pj("remoto", "logs", `${stamp()}-${logName}.log`), `$ ${STUB ? "STUB-shopify" : "shopify"} ${args.join(" ")}\n--- stdout\n${r.stdout ?? ""}\n--- stderr\n${r.stderr ?? ""}\n`);
     return { ok: r.status === 0, stdout: r.stdout ?? "", stderr: r.stderr ?? "" };
@@ -208,7 +216,7 @@ C.iniciar = async () => {
     if (!captura) { cli(["check-url", url], { timeout: 120_000 }); captura = pick(cli(["capture", url]), /Execução:\s*(\S+)/) ?? die("captura sem diretório"); }
     const cap = readJson(join(ROOT, captura, "manifest.json"));
     const ana = pick(cli(["analyze", captura]), /Análise:\s*(\S+)/) ?? die("análise sem diretório");
-    const gen = pick(cli(["generate", ana, ...(conteudo ? ["--content", conteudo] : []), "--apply"]), /\[OK\] Tema gerado:\s*(\S+)\/theme/) ?? die("geração sem diretório");
+    const gen = pick(cli(["generate", ana, ...(conteudo ? ["--content", conteudo] : []), "--apply"]), /\[OK\] Tema gerado:\s*(\S+)[\/\\]theme/) ?? die("geração sem diretório");
     const ver = cli(["verify-theme", gen, ...(conteudo ? ["--content", conteudo] : [])]);
     if (!/Tema apto para prévia/.test(ver)) die("o tema gerado não passou no verify-theme");
     mkdirSync(P, { recursive: true });
@@ -222,7 +230,7 @@ C.iniciar = async () => {
             caixas: { desktop: s.viewports?.desktop?.box ?? null, mobile: s.viewports?.mobile?.box ?? null } };
     }) });
     const imagens = [...new Set(arquivos(TEMA).filter((f) => f.endsWith(".json")).flatMap((f) => readFileSync(join(TEMA, f), "utf8").match(/shopify:\/\/shop_images\/[^"]+/g) ?? []))];
-    const { runThemeCheck } = await import(join(ROOT, "reference/generator/theme-check.mjs"));
+    const { runThemeCheck } = await import(pathToFileURL(join(ROOT, "reference/generator/theme-check.mjs")).href);
     const base = { themeCheck: await runThemeCheck(TEMA), imagens, manifesto: manifesto(TEMA) };
     const p = { schema: 1, slug, criadoEm: now(), loja, referencia: { url: url ?? cap.source?.url ?? null, captura }, base: { analise: ana, geracao: gen, conteudo, aceitos: "verify-theme: Tema apto para prévia" }, rascunho: null, versaoAtual: null };
     writeJson(pj("base.json"), base);

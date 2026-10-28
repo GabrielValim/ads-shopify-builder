@@ -9,12 +9,13 @@
  *   template.json: { "sections": { "<chave>": { "type": "<arquivo sem .liquid>", "settings": {...}, "blocks": {...}, "block_order": [...] } }, "order": ["<chave>"] }
  *   tema.json (opcional): { "fonteTitulos": "...", "fonteCorpo": "...", "fundoPagina": "#..." }
  */
+import { pathToFileURL } from "node:url";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 
 const ROOT = resolve(process.env.ADS_MOTOR_ROOT ?? join(import.meta.dirname, "../../../.."));
-const { parse, render, extractSchema, sectionScope } = await import(join(ROOT, "experimental/cf01-code-first/lib/liquid-lite.mjs"));
-const { renderIsolated } = await import(join(ROOT, "experimental/cf01-code-first/lib/render.mjs"));
+const { parse, render, extractSchema, sectionScope } = await import(pathToFileURL(join(ROOT, "experimental/cf01-code-first/lib/liquid-lite.mjs")).href);
+const { renderIsolated } = await import(pathToFileURL(join(ROOT, "experimental/cf01-code-first/lib/render.mjs")).href);
 
 async function renderPortatil(html, dir) {
     const { mkdirSync: mk, writeFileSync: wr, readdirSync: rd } = await import("node:fs");

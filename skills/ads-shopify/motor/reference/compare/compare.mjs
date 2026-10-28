@@ -8,7 +8,7 @@
  */
 
 import { readdir } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { z } from "zod";
 
 import { loadCapture } from "../analyzer/load-capture.mjs";
@@ -402,7 +402,7 @@ export async function compareRender({ referenceDir, candidateDir, analysisDir, g
     const host = new URL(candidate.manifest.source.url);
     const run = await createRun({ url: host, rootDir: outputDir });
     result.runId = run.id;
-    result.history = await previousComparisons(join(outputDir, run.dir.split("/").slice(-2)[0]), run.id);
+    result.history = await previousComparisons(join(outputDir, basename(dirname(run.dir))), run.id);
     for (const [name, data] of Object.entries(images).sort()) await run.writeArtifact(name, data, { kind: "comparison-image" });
     await run.writeArtifact("comparison.json", JSON.stringify(result, null, 2) + "\n", { kind: "comparison" });
     await run.writeArtifact("comparison-report.html", renderComparisonReport(result, images), { kind: "report" });

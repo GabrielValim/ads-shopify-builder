@@ -5,7 +5,7 @@ Crie uma loja Shopify editável a partir de um site de referência, conversando 
 Você informa um site e a sua loja. O Claude analisa o site, gera um tema completo (baseado no Dawn), cria um
 **rascunho não publicado** na sua loja — só com a sua autorização — e aplica no mesmo rascunho os ajustes que você pedir.
 
-Versão 0.3.0 · Skill para o Claude Code (inclusive a aba **Code** do Claude Desktop) · licença MIT
+Versão 0.3.1 · Skill para o Claude Code (inclusive a aba **Code** do Claude Desktop) · licença MIT
 
 ## 1. Instalar
 

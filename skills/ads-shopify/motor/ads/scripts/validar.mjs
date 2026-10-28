@@ -7,14 +7,21 @@
  *  3. Theme Check: Dawn travado + a seção (+ template de prévia) → ofensas NOVAS em relação ao Dawn puro.
  * Uso: node validar.mjs <secao.liquid> <template.json> <saida-dir>
  */
+import { pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 
 const ROOT = resolve(process.env.ADS_MOTOR_ROOT ?? join(import.meta.dirname, "../../../.."));
-const { extractVerifiedDawn } = await import(join(ROOT, "reference/generator/dawn-base.mjs"));
-const { ThemeSchema, validateTemplate } = await import(join(ROOT, "reference/generator/dawn-schema.mjs"));
-const { extractSchema } = await import(join(ROOT, "experimental/cf01-code-first/lib/liquid-lite.mjs"));
+// Variaveis que o Windows exige para qualquer processo filho (e que a CLI da
+// Shopify usa para achar a sessao de login). Em POSIX o filtro nao acrescenta nada.
+const ENV_SISTEMA = ["SystemRoot", "windir", "COMSPEC", "PATHEXT", "APPDATA", "LOCALAPPDATA", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "TEMP", "TMP"];
+const envSistema = () => Object.fromEntries(ENV_SISTEMA.filter((k) => process.env[k] !== undefined).map((k) => [k, process.env[k]]));
+const CLI_VALIDAR_ENTRY = join(ROOT, "node_modules", "@shopify", "cli", "bin", "run.js");
+const CLI_VALIDAR = existsSync(CLI_VALIDAR_ENTRY) ? [process.execPath, CLI_VALIDAR_ENTRY] : ["shopify"];
+const { extractVerifiedDawn } = await import(pathToFileURL(join(ROOT, "reference/generator/dawn-base.mjs")).href);
+const { ThemeSchema, validateTemplate } = await import(pathToFileURL(join(ROOT, "reference/generator/dawn-schema.mjs")).href);
+const { extractSchema } = await import(pathToFileURL(join(ROOT, "experimental/cf01-code-first/lib/liquid-lite.mjs")).href);
 
 const [secPath, tplPath, outDir] = process.argv.slice(2);
 if (!secPath || !tplPath || !outDir) { console.error("uso: validar.mjs <secao.liquid> <template.json> <saida-dir>"); process.exit(2); }
@@ -43,8 +50,8 @@ if (fixos.length) out.problemas.push(`texto visível fixo (não editável): ${fi
 // 1 + 3. tema temporário = Dawn travado + seção (+ template de prévia como templates/index.json)
 const base = await extractVerifiedDawn();
 try {
-    const check = () => { try { return JSON.parse(execFileSync("shopify", ["theme", "check", "--path", base.dir, "--output", "json", "--no-color"], { env: { PATH: process.env.PATH, HOME: process.env.HOME, NO_COLOR: "1", CI: "1", SHOPIFY_CLI_NO_ANALYTICS: "1" }, encoding: "utf8", maxBuffer: 64 << 20 })); } catch (e) { return JSON.parse(e.stdout); } };
-    const offenses = (data) => data.flatMap((f) => (f.offenses ?? []).map((o) => `${o.check} ${f.path.split("/").slice(-2).join("/")}: ${o.message}`));
+    const check = () => { try { return JSON.parse(execFileSync(CLI_VALIDAR[0], [...CLI_VALIDAR.slice(1), "theme", "check", "--path", base.dir, "--output", "json", "--no-color"], { env: { PATH: process.env.PATH, HOME: process.env.HOME, ...envSistema(), NO_COLOR: "1", CI: "1", SHOPIFY_CLI_NO_ANALYTICS: "1" }, encoding: "utf8", maxBuffer: 64 << 20 })); } catch (e) { return JSON.parse(e.stdout); } };
+    const offenses = (data) => data.flatMap((f) => (f.offenses ?? []).map((o) => `${o.check} ${f.path.split(/[\\/]/).slice(-2).join("/")}: ${o.message}`));
     const before = new Set(offenses(check()));
     copyFileSync(secPath, join(base.dir, "sections", `${type}.liquid`));
     writeFileSync(join(base.dir, "templates", "index.json"), JSON.stringify(template, null, 2));
